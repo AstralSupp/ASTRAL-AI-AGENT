@@ -1,0 +1,42 @@
+{
+  "name": "ASTRAL AI Agent",
+  "description": "WhatsApp AI Agent with Chatwoot integration for customer service and sales",
+  "type": "docker-compose",
+  "compose_file": "docker-compose.yml",
+  "healthcheck": {
+    "path": "/health",
+    "port": 3000
+  },
+  "ports": {
+    "3000": {
+      "protocol": "http"
+    }
+  },
+  "env": {
+    "required": [
+      "SUPABASE_URL",
+      "SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_KEY",
+      "CHATWOOT_URL",
+      "CHATWOOT_API_TOKEN",
+      "CHATWOOT_ACCOUNT_ID",
+      "CHATWOOT_INBOX_ID",
+      "ANTHROPIC_API_KEY",
+      "OPENAI_API_KEY",
+      "ELEVENLABS_API_KEY",
+      "ELEVENLABS_VOICE_ID",
+      "BUSINESS_NAME",
+      "BUSINESS_DESCRIPTION"
+    ],
+    "optional": [
+      "PORT",
+      "CLAUDE_MODEL",
+      "AGENT_NAME",
+      "BUSINESS_LANGUAGE",
+      "MESSAGE_BURST_DELAY_MS",
+      "TYPING_SPEED_CPS",
+      "MAX_TYPING_INDICATOR_MS",
+      "WHATSAPP_PHONE_NUMBER"
+    ]
+  }
+}
