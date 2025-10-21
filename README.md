@@ -121,12 +121,14 @@ BUSINESS_DESCRIPTION=Descrição do seu negócio
 BUSINESS_LANGUAGE=pt-BR
 ```
 
-### 4. Set up Supabase database
+### 4. Set up Database (Optional for Docker Compose)
 
-Run the migration in your Supabase SQL editor:
+**For Docker Compose (Coolify, local):** Database auto-initializes on first run! No manual setup needed.
+
+**For manual Supabase setup:** Run the migration in your Supabase SQL editor:
 
 ```bash
-cat supabase/migrations/001_initial_schema.sql
+cat database/init/001_initial_schema.sql
 ```
 
 Copy and execute the SQL in your Supabase project.
@@ -178,16 +180,19 @@ docker-compose up -d
 
 ## Coolify Deployment
 
-1. Push your code to a Git repository
-2. In Coolify:
-   - Create a new resource
-   - Select "Docker Compose"
-   - Connect your Git repository
-   - Coolify will auto-detect `docker-compose.yml`
-3. Configure environment variables in Coolify UI
-4. Deploy
+**Quick Start (5 minutes):** See [COOLIFY_QUICKSTART.md](./COOLIFY_QUICKSTART.md)
 
-The service will be available at the domain configured in Coolify.
+**Full Guide:** See [COOLIFY_DEPLOYMENT.md](./COOLIFY_DEPLOYMENT.md)
+
+### TL;DR
+
+1. Create new Docker Compose resource in Coolify
+2. Connect repository: `https://github.com/AstralSupp/ASTRAL-AI-AGENT`
+3. Set domain: `ai-agent.astralsup.com` (or your domain)
+4. Add environment variables (see `.env.coolify.example`)
+5. Deploy!
+
+The service will be available at the domain configured in Coolify with auto-provisioned SSL.
 
 ## Configuration
 
@@ -355,11 +360,14 @@ ASTRAL-AI-AGENT/
 │   │   └── supabase.service.ts
 │   ├── types/              # TypeScript types
 │   ├── utils/              # Utilities
+│   ├── views/              # EJS templates (admin dashboard)
 │   └── index.ts            # Entry point
-├── supabase/
-│   └── migrations/         # Database migrations
+├── database/
+│   └── init/               # Auto-run database migrations
 ├── Dockerfile
 ├── docker-compose.yml
+├── COOLIFY_DEPLOYMENT.md   # Coolify deployment guide
+├── COOLIFY_QUICKSTART.md   # 5-minute quick start
 └── README.md
 ```
 
