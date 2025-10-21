@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASTRAL AI Agent - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #60a5fa;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-left: 4px solid #60a5fa;
+        }
+
+        .stat-card h3 {
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            color: #60a5fa;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .logs-section {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logs-header h2 {
+            color: #60a5fa;
+            font-size: 20px;
+        }
+
+        .refresh-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #2563eb;
+        }
+
+        .log-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .log-table thead {
+            background: #334155;
+        }
+
+        .log-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .log-table td {
+            padding: 12px;
+            border-bottom: 1px solid #334155;
+            font-size: 13px;
+        }
+
+        .log-table tbody tr:hover {
+            background: #2d3748;
+        }
+
+        .decision-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .decision-type.respond {
+            background: #10b981;
+            color: white;
+        }
+
+        .decision-type.wait {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .decision-type.react {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .decision-type.think {
+            background: #6b7280;
+            color: white;
+        }
+
+        .timestamp {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .contact-name {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .reasoning {
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .log-table {
+                font-size: 12px;
+            }
+
+            .log-table th,
+            .log-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🤖 ASTRAL AI Agent - Admin Dashboard</h1>
+                    <p class="subtitle">Real-time monitoring and logs</p>
+                </div>
+                <form method="POST" action="/admin/logout" style="display: inline;">
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+            </div>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Conversations</h3>
+                <div class="value"><%= stats.totalConversations %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Messages</h3>
+                <div class="value"><%= stats.totalMessages %></div>
+            </div>
+            <div class="stat-card">
+                <h3>AI Decisions Made</h3>
+                <div class="value"><%= stats.totalDecisions %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Last 24h Activity</h3>
+                <div class="value"><%= stats.recentActivity %></div>
+            </div>
+        </div>
+
+        <div class="logs-section">
+            <div class="logs-header">
+                <h2>Recent Agent Activity</h2>
+                <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Contact</th>
+                            <th>Decision</th>
+                            <th>Message</th>
+                            <th>Reasoning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% logs.forEach(function(log) { %>
+                        <tr>
+                            <td class="timestamp">
+                                <%= new Date(log.created_at).toLocaleString() %>
+                            </td>
+                            <td class="contact-name">
+                                <%= log.contact_name || 'Unknown' %>
+                            </td>
+                            <td>
+                                <span class="decision-type <%= log.decision_type %>">
+                                    <%= log.decision_type.toUpperCase() %>
+                                </span>
+                            </td>
+                            <td>
+                                <%= log.message_content ? log.message_content.substring(0, 50) + (log.message_content.length > 50 ? '...' : '') : '-' %>
+                            </td>
+                            <td class="reasoning" title="<%= log.reasoning %>">
+                                <%= log.reasoning %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

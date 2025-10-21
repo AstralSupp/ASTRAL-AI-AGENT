@@ -8,16 +8,14 @@ export const config = {
     port: parseInt(process.env.PORT || '3000', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
   },
-  supabase: {
-    url: process.env.SUPABASE_URL || '',
-    anonKey: process.env.SUPABASE_ANON_KEY || '',
-    serviceKey: process.env.SUPABASE_SERVICE_KEY || '',
+  database: {
+    url: process.env.DATABASE_URL || 'postgresql://astral:astral_secure_password_change_me@localhost:5432/astral_db',
   },
   chatwoot: {
-    url: process.env.CHATWOOT_URL || '',
-    apiToken: process.env.CHATWOOT_API_TOKEN || '',
-    accountId: process.env.CHATWOOT_ACCOUNT_ID || '',
-    inboxId: process.env.CHATWOOT_INBOX_ID || '',
+    url: process.env.CHATWOOT_URL || 'https://chatwoot.astralsup.com',
+    apiToken: process.env.CHATWOOT_API_TOKEN || '7qNGm4ixCxpqQRrQ5Erh4rv5',
+    accountId: process.env.CHATWOOT_ACCOUNT_ID || '1',
+    inboxId: process.env.CHATWOOT_INBOX_ID || '1',
   },
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -28,11 +26,11 @@ export const config = {
   },
   elevenlabs: {
     apiKey: process.env.ELEVENLABS_API_KEY || '',
-    voiceId: process.env.ELEVENLABS_VOICE_ID || '',
+    voiceId: process.env.ELEVENLABS_VOICE_ID || 'yoiZfrc4wQ9Rs1QGpnm5',
   },
   agent: {
     name: process.env.AGENT_NAME || 'Astral',
-    businessName: process.env.BUSINESS_NAME || 'Nossa Empresa',
+    businessName: process.env.BUSINESS_NAME || 'AstralSup',
     businessDescription: process.env.BUSINESS_DESCRIPTION || 'Empresa brasileira de atendimento ao cliente',
     language: process.env.BUSINESS_LANGUAGE || 'pt-BR',
   },
@@ -41,8 +39,9 @@ export const config = {
     typingSpeedCps: parseInt(process.env.TYPING_SPEED_CPS || '50', 10),
     maxTypingIndicatorMs: parseInt(process.env.MAX_TYPING_INDICATOR_MS || '10000', 10),
   },
-  whatsapp: {
-    phoneNumber: process.env.WHATSAPP_PHONE_NUMBER || '',
+  admin: {
+    username: process.env.ADMIN_USERNAME || 'admin',
+    password: process.env.ADMIN_PASSWORD || 'change_this_password',
   },
 };
 
@@ -65,8 +64,7 @@ export const getAgentConfig = (): AgentConfig => ({
 
 export function validateConfig() {
   const required = [
-    'SUPABASE_URL',
-    'SUPABASE_ANON_KEY',
+    'DATABASE_URL',
     'CHATWOOT_URL',
     'CHATWOOT_API_TOKEN',
     'ANTHROPIC_API_KEY',

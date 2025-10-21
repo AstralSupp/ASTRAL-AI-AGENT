@@ -1,7 +1,7 @@
 import { MessageBurst, ChatwootMessage } from '../types';
 import { config } from '../config';
 import { sleep, isMessageLikelyComplete } from '../utils/helpers';
-import supabaseService from './supabase.service';
+import databaseService from './database.service';
 import logger from '../utils/logger';
 
 class MessageBurstService {
@@ -10,13 +10,13 @@ class MessageBurstService {
   async handleIncomingMessage(conversationId: number, message: ChatwootMessage): Promise<boolean> {
     try {
       // Check if there's an active burst for this conversation
-      let burst = await supabaseService.getActiveMessageBurst(conversationId);
+      let burst = await databaseService.getActiveMessageBurst(conversationId);
 
       const now = new Date();
 
       if (!burst) {
         // Create new burst
-        burst = await supabaseService.createMessageBurst({
+        burst = await databaseService.createMessageBurst({
           conversation_id: conversationId,
           message_ids: [message.id],
           first_message_at: now,
@@ -30,7 +30,7 @@ class MessageBurstService {
       } else {
         // Update existing burst
         const messageIds = [...(burst.message_ids || []), message.id];
-        await supabaseService.updateMessageBurst(burst.id, {
+        await databaseService.updateMessageBurst(burst.id, {
           message_ids: messageIds,
           last_message_at: now,
         });
@@ -73,7 +73,7 @@ class MessageBurstService {
 
   private async completeBurst(conversationId: number, burstId: number) {
     try {
-      await supabaseService.updateMessageBurst(burstId, {
+      await databaseService.updateMessageBurst(burstId, {
         is_complete: true,
       });
 
@@ -95,7 +95,7 @@ class MessageBurstService {
       logger.info('Processing message burst', { conversationId, burstId });
 
       // Mark as processed
-      await supabaseService.updateMessageBurst(burstId, {
+      await databaseService.updateMessageBurst(burstId, {
         processed: true,
       });
 

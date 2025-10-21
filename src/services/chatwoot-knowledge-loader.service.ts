@@ -1,5 +1,5 @@
 import axios from 'axios';
-import supabaseService from './supabase.service';
+import databaseService from './database.service';
 import claudeService from './claude.service';
 import logger from '../utils/logger';
 
@@ -15,7 +15,7 @@ class ChatwootKnowledgeLoaderService {
 
       // Store in database
       for (const item of chatwootKnowledge) {
-        await supabaseService.upsertChatwootKnowledge(item);
+        await databaseService.upsertChatwootKnowledge(item);
       }
 
       // Update Claude's system prompt with knowledge
