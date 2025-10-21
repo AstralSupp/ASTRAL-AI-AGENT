@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { config } from '../config';
-import databaseService from '../services/database.service';
+import supabaseService from '../services/supabase.service';
 import logger from '../utils/logger';
 
 export async function showLoginPage(req: Request, res: Response) {
@@ -33,8 +33,8 @@ export async function handleLogin(req: Request, res: Response) {
 export async function showDashboard(req: Request, res: Response) {
   try {
     const [stats, logs] = await Promise.all([
-      databaseService.getStats(),
-      databaseService.getRecentLogs(50),
+      supabaseService.getStats(),
+      supabaseService.getRecentLogs(50),
     ]);
 
     res.render('dashboard', {

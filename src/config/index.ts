@@ -69,7 +69,8 @@ export const getAgentConfig = (): AgentConfig => ({
 
 export function validateConfig() {
   const required = [
-    'DATABASE_URL',
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_KEY',
     'CHATWOOT_URL',
     'CHATWOOT_API_TOKEN',
     'ANTHROPIC_API_KEY',

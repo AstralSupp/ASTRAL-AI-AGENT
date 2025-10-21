@@ -1,5 +1,5 @@
 import { ChatwootWebhook, ChatwootMessage, AgentDecision } from '../types';
-import databaseService from './database.service';
+import supabaseService from './supabase.service';
 import chatwootService from './chatwoot.service';
 import claudeService from './claude.service';
 import openaiService from './openai.service';
@@ -82,7 +82,7 @@ class MessageProcessorService {
   private async storeConversationData(webhook: ChatwootWebhook) {
     try {
       // Store/update conversation
-      await databaseService.upsertConversation({
+      await supabaseService.upsertConversation({
         id: webhook.conversation.id,
         contact_id: webhook.conversation.meta.sender.id,
         contact_name: webhook.conversation.meta.sender.name,
@@ -103,7 +103,7 @@ class MessageProcessorService {
       }
 
       // Store message
-      await databaseService.insertMessage({
+      await supabaseService.insertMessage({
         id: webhook.id,
         conversation_id: webhook.conversation.id,
         message_type: 'incoming',
@@ -123,7 +123,7 @@ class MessageProcessorService {
       const conversationId = webhook.conversation.id;
 
       // Get conversation context
-      const context = await databaseService.getConversationContext(conversationId);
+      const context = await supabaseService.getConversationContext(conversationId);
       if (!context) {
         logger.error('Could not fetch conversation context');
         return;
@@ -139,7 +139,7 @@ class MessageProcessorService {
       );
 
       // Log the decision
-      await databaseService.logAgentDecision({
+      await supabaseService.logAgentDecision({
         conversation_id: conversationId,
         message_id: webhook.id,
         decision_type: decision.action,
@@ -262,7 +262,7 @@ class MessageProcessorService {
 
       // Store response in database
       const sentMessage = await chatwootService.sendMessage(conversationId, response);
-      await databaseService.insertMessage({
+      await supabaseService.insertMessage({
         id: sentMessage.id,
         conversation_id: conversationId,
         message_type: 'outgoing',
