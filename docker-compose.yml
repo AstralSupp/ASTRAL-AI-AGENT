@@ -1,24 +1,44 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database (Supabase uses this)
   postgres:
-    image: postgres:15-alpine
+    image: supabase/postgres:15.1.1.54
     container_name: astral-postgres
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
-      POSTGRES_USER: astral
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-astral_secure_password_change_me}
-      POSTGRES_DB: astral_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+      POSTGRES_DB: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U astral -d astral_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - astral-network
+    restart: unless-stopped
+
+  # PostgREST (Supabase REST API)
+  rest:
+    image: postgrest/postgrest:v12.0.2
+    container_name: astral-postgrest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@postgres:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    ports:
+      - "3001:3000"
     networks:
       - astral-network
     restart: unless-stopped
@@ -32,13 +52,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rest:
+        condition: service_started
     environment:
       # Server
       NODE_ENV: production
       PORT: 3000
 
-      # Database (Postgres connection string)
-      DATABASE_URL: postgresql://astral:${POSTGRES_PASSWORD:-astral_secure_password_change_me}@postgres:5432/astral_db
+      # Supabase Configuration
+      SUPABASE_URL: http://rest:3000
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@postgres:5432/postgres
 
       # Chatwoot
       CHATWOOT_URL: ${CHATWOOT_URL:-https://chatwoot.astralsup.com}
@@ -66,7 +91,8 @@ services:
 
       # Admin Dashboard
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change_this_password}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-astral_admin_2024}
+      SESSION_SECRET: ${SESSION_SECRET:-your-session-secret-change-in-production}
 
     ports:
       - "${PORT:-3000}:3000"
