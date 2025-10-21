@@ -1,112 +1,116 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database (Supabase uses this)
+  # PostgreSQL Database with Supabase extensions
   postgres:
-    image: supabase/postgres:15.1.1.54
-    container_name: astral-postgres
+    image: 'supabase/postgres:15.1.1.54'
+    pull_policy: always
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
-      POSTGRES_DB: postgres
+    restart: always
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
+      - 'postgres_data:/var/lib/postgresql/data'
+      - './database/init:/docker-entrypoint-initdb.d'
+    environment:
+      - POSTGRES_USER=${SERVICE_USER_POSTGRES:-postgres}
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test:
+        - CMD-SHELL
+        - 'pg_isready -h localhost -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB}'
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - astral-network
-    restart: unless-stopped
 
-  # PostgREST (Supabase REST API)
+  # PostgREST - Auto REST API for PostgreSQL (Supabase)
   rest:
-    image: postgrest/postgrest:v12.0.2
-    container_name: astral-postgrest
+    image: 'postgrest/postgrest:v12.0.2'
+    pull_policy: always
+    restart: always
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      PGRST_DB_URI: postgres://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@postgres:5432/postgres
-      PGRST_DB_SCHEMAS: public
-      PGRST_DB_ANON_ROLE: anon
-      PGRST_JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
-      PGRST_DB_USE_LEGACY_GUCS: "false"
-    ports:
-      - "3001:3000"
+      - PGRST_DB_URI=postgres://${SERVICE_USER_POSTGRES:-postgres}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-postgres}
+      - PGRST_DB_SCHEMAS=public
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=${SERVICE_PASSWORD_64_JWT}
+      - PGRST_DB_USE_LEGACY_GUCS=false
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'wget -qO- http://localhost:3000/ || exit 1'
+      interval: 20s
+      timeout: 10s
+      retries: 5
     networks:
       - astral-network
-    restart: unless-stopped
 
   # AI Agent Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: astral-ai-agent
+    image: '${APP_IMAGE:-ghcr.io/astralsup/astral-ai-agent:latest}'
+    pull_policy: always
+    restart: always
     depends_on:
       postgres:
         condition: service_healthy
       rest:
-        condition: service_started
+        condition: service_healthy
+    volumes:
+      - 'logs:/app/logs'
     environment:
-      # Server
-      NODE_ENV: production
-      PORT: 3000
+      # Server Configuration
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
 
-      # Supabase Configuration
-      SUPABASE_URL: http://rest:3000
-      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
-      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}@postgres:5432/postgres
+      # Supabase Configuration (Internal)
+      - SUPABASE_URL=http://rest:3000
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q}
 
-      # Chatwoot
-      CHATWOOT_URL: ${CHATWOOT_URL:-https://chatwoot.astralsup.com}
-      CHATWOOT_API_TOKEN: ${CHATWOOT_API_TOKEN:-7qNGm4ixCxpqQRrQ5Erh4rv5}
-      CHATWOOT_ACCOUNT_ID: ${CHATWOOT_ACCOUNT_ID:-1}
-      CHATWOOT_INBOX_ID: ${CHATWOOT_INBOX_ID:-1}
+      # Chatwoot Configuration
+      - CHATWOOT_URL=${CHATWOOT_URL}
+      - CHATWOOT_API_TOKEN=${CHATWOOT_API_TOKEN}
+      - CHATWOOT_ACCOUNT_ID=${CHATWOOT_ACCOUNT_ID:-1}
+      - CHATWOOT_INBOX_ID=${CHATWOOT_INBOX_ID:-1}
 
-      # AI Services
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-3-5-sonnet-20241022}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY}
-      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-yoiZfrc4wQ9Rs1QGpnm5}
+      # AI Service API Keys
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-3-5-sonnet-20241022}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-yoiZfrc4wQ9Rs1QGpnm5}
 
-      # Agent Config
-      AGENT_NAME: ${AGENT_NAME:-Astral}
-      BUSINESS_NAME: ${BUSINESS_NAME:-AstralSup}
-      BUSINESS_DESCRIPTION: ${BUSINESS_DESCRIPTION:-Empresa brasileira de atendimento ao cliente}
-      BUSINESS_LANGUAGE: ${BUSINESS_LANGUAGE:-pt-BR}
+      # Agent Configuration
+      - AGENT_NAME=${AGENT_NAME:-Astral}
+      - BUSINESS_NAME=${BUSINESS_NAME:-AstralSup}
+      - BUSINESS_DESCRIPTION=${BUSINESS_DESCRIPTION:-Empresa brasileira de atendimento ao cliente com inteligência artificial}
+      - BUSINESS_LANGUAGE=${BUSINESS_LANGUAGE:-pt-BR}
 
       # Message Handling
-      MESSAGE_BURST_DELAY_MS: ${MESSAGE_BURST_DELAY_MS:-3000}
-      TYPING_SPEED_CPS: ${TYPING_SPEED_CPS:-50}
-      MAX_TYPING_INDICATOR_MS: ${MAX_TYPING_INDICATOR_MS:-10000}
+      - MESSAGE_BURST_DELAY_MS=${MESSAGE_BURST_DELAY_MS:-3000}
+      - TYPING_SPEED_CPS=${TYPING_SPEED_CPS:-50}
+      - MAX_TYPING_INDICATOR_MS=${MAX_TYPING_INDICATOR_MS:-10000}
 
       # Admin Dashboard
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-astral_admin_2024}
-      SESSION_SECRET: ${SESSION_SECRET:-your-session-secret-change-in-production}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${SERVICE_PASSWORD_ADMIN}
+      - SESSION_SECRET=${SERVICE_PASSWORD_64_SESSION}
 
     ports:
-      - "${PORT:-3000}:3000"
+      - '3000:3000'
     networks:
       - astral-network
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test:
+        - CMD-SHELL
+        - 'wget -qO- http://localhost:3000/health || exit 1'
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    volumes:
-      - logs:/app/logs
 
 volumes:
   postgres_data:
