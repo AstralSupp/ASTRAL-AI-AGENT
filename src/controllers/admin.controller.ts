@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
 import { config } from '../config';
 import supabaseService from '../services/supabase.service';
 import logger from '../utils/logger';
 
-export async function showLoginPage(req: Request, res: Response) {
+export async function showLoginPage(_req: Request, res: Response) {
   res.render('login', { error: null });
 }
 
@@ -30,7 +29,7 @@ export async function handleLogin(req: Request, res: Response) {
   }
 }
 
-export async function showDashboard(req: Request, res: Response) {
+export async function showDashboard(_req: Request, res: Response) {
   try {
     const [stats, logs] = await Promise.all([
       supabaseService.getStats(),

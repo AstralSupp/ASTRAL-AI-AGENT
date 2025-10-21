@@ -1,6 +1,6 @@
-import { MessageBurst, ChatwootMessage } from '../types';
+import { ChatwootMessage } from '../types';
 import { config } from '../config';
-import { sleep, isMessageLikelyComplete } from '../utils/helpers';
+import { isMessageLikelyComplete } from '../utils/helpers';
 import supabaseService from './supabase.service';
 import logger from '../utils/logger';
 

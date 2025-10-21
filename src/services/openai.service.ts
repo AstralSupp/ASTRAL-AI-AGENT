@@ -2,8 +2,6 @@ import OpenAI from 'openai';
 import { config } from '../config';
 import logger from '../utils/logger';
 import axios from 'axios';
-import FormData from 'form-data';
-import { Readable } from 'stream';
 
 class OpenAIService {
   private client: OpenAI;
@@ -48,33 +46,6 @@ class OpenAIService {
       return transcription;
     } catch (error) {
       logger.error('Error transcribing audio:', error);
-      throw error;
-    }
-  }
-
-  async transcribeAudioBuffer(audioBuffer: Buffer, format = 'ogg'): Promise<string> {
-    try {
-      logger.info('Transcribing audio buffer with Whisper', {
-        size: audioBuffer.length,
-        format,
-      });
-
-      const audioFile = new File([audioBuffer], `audio.${format}`, {
-        type: `audio/${format}`,
-      });
-
-      const transcription = await this.client.audio.transcriptions.create({
-        file: audioFile,
-        model: 'whisper-1',
-        language: 'pt',
-        response_format: 'text',
-      });
-
-      logger.info('Audio buffer transcribed successfully');
-
-      return transcription;
-    } catch (error) {
-      logger.error('Error transcribing audio buffer:', error);
       throw error;
     }
   }

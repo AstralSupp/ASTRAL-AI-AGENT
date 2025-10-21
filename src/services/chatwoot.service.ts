@@ -6,11 +6,9 @@ import FormData from 'form-data';
 class ChatwootService {
   private client: AxiosInstance;
   private accountId: string;
-  private inboxId: string;
 
   constructor() {
     this.accountId = config.chatwoot.accountId;
-    this.inboxId = config.chatwoot.inboxId;
 
     this.client = axios.create({
       baseURL: `${config.chatwoot.url}/api/v1`,

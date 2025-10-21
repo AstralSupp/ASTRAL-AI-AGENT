@@ -1,4 +1,4 @@
-import { ChatwootWebhook, ChatwootMessage, AgentDecision } from '../types';
+import { ChatwootWebhook, AgentDecision } from '../types';
 import supabaseService from './supabase.service';
 import chatwootService from './chatwoot.service';
 import claudeService from './claude.service';
@@ -242,7 +242,7 @@ class MessageProcessorService {
         const duration = sendAsAudio
           ? calculateRecordingDuration(response.length, config.messaging.maxTypingIndicatorMs)
           : calculateTypingDuration(
-              response.length,
+              response,
               config.messaging.typingSpeedCps,
               config.messaging.maxTypingIndicatorMs
             );

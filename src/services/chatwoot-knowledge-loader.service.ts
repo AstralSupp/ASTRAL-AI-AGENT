@@ -1,11 +1,8 @@
-import axios from 'axios';
 import supabaseService from './supabase.service';
 import claudeService from './claude.service';
 import logger from '../utils/logger';
 
 class ChatwootKnowledgeLoaderService {
-  private chatwootDocsUrl = 'https://www.chatwoot.com/docs';
-
   async loadChatwootKnowledge() {
     try {
       logger.info('Loading Chatwoot knowledge...');
